@@ -1,0 +1,9 @@
+<script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript" src="http://mpld3.github.io/js/mpld3.v0.1.js"></script>
+<style>
+</style>
+<div id="fig"></div>
+<script type="text/javascript">
+  var json01 = {{ figure | safe }};
+  mpld3.draw_figure("fig", json01);
+</script>
