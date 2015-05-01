@@ -69,6 +69,10 @@ TEMPLATES = [
     },
 ]
 
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STATICFILES_FINDERS = ('django.contrib.staticfiles.finders.FileSystemFinder',
+ 'django.contrib.staticfiles.finders.AppDirectoriesFinder')
+
 WSGI_APPLICATION = 'reveal_site.wsgi.application'
 
 

@@ -1,3 +1,79 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<script type="text/javascript" src={% static "review/jquery-1.11.2.js" %}></script>
+<script type="text/javascript" src={% static "review/scenario.js" %} ></script>
+<form action="/view/" method="POST" id="post-form">
+    {% csrf_token %}
+    <ul>
+{% comment %}
+    {{ form.as_p }}
+{% endcomment %}
+    <div id="scenariodata">
+    <p>
+      <tr>
+      <th>{{ form.scenario.label_tag }}</th>
+      <td>{{ form.scenario }}</td>
+      <th>{{ form.experiments.label_tag }}</th>
+      <td>{{ form.experiments }}</td>
+     </tr>
+    </p>
+    </div>
+    <div id="experimentset">
+      {{ formset.management_form }}
+      {% for f in formset %}
+        <div id="experiment-{{ f.index }}">
+{% comment %}
+        <p>
+        {{ f.as_table }}
+        </p>
+{% endcomment %}
+        <p>
+        <tr>
+          <th>{{ f.experiment.label_tag }}</th>
+          <td>{{ f.experiment }}</td>
+          <th>{{ f.color.label_tag }}</th>
+          <td>{{ f.color }}</td>
+        </tr>
+        </p>
+        <p>
+        <tr>
+          <th>{{ f.min_time.label_tag }}</th>
+          <td>{{ f.min_time }}</td>
+          <th>{{ f.max_time.label_tag }}</th>
+          <td>{{ f.max_time }}</td>
+          <th>{{ f.samples.label_tag }}</th>
+          <td>{{ f.samples }}</td>
+        </tr>
+        </p>
+        </div>
+      {% endfor %}
+    </div>
+    <div id="plotset">
+    <div id="scenariodata">
+    <p>
+      <tr>
+      <th>{{ form.xaxis.label_tag }}</th>
+      <td>{{ form.xaxis }}</td>
+      <th>{{ form.yaxis.label_tag }}</th>
+      <td>{{ form.yaxis }}</td>
+      <th>{{ form.samples.label_tag }}</th>
+      <td>{{ form.samples }}</td>
+     </tr>
+    </p>
+    </div>
+{% comment %}
+      {% for f in form.plot_form %}
+        <p>
+        {{ f.as_p }}
+        </p>
+      {% endfor %}
+{% endcomment %}
+    </div>
+    </ul>
+    <input type="submit" value"Submit" />
+</form>
+
+{% comment %}
 <form action="/review/" method="post">
     {% csrf_token %}
     <ul>
@@ -5,3 +81,4 @@
     </ul>
     <input type="submit" value"Submit" />
 </form>
+{% endcomment %}
