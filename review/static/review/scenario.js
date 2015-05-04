@@ -64,7 +64,7 @@ function update_scenario() {
     });
 };
 
-function update_experiments() {
+function update_experiments( newval, oldval ) {
     $.ajax({
         url : "/query/",
         type : "POST",
@@ -73,7 +73,7 @@ function update_experiments() {
                  csrfmiddlewaretoken: document.getElementsByName('csrfmiddlewaretoken')[0].value,
                  fun : "request_scenario",
                  scenario : $('#id_scenario').val(), 
-                 experiments : $('#id_experiments').val()
+                 experiments : newval
         },
 
         success : function(json) {
@@ -81,21 +81,7 @@ function update_experiments() {
             experiment_ids = JSON.parse(json.experiment_ids);
             colors = JSON.parse(json.colors);
 
-            var newval = parseInt($('#id_experiments').val());
-            var oldval = parseInt($('#id_form-TOTAL_FORMS').attr('value'));
-
-            console.log( newval )
-            console.log( oldval )
-            if( newval < oldval ) {
-              for( var i = 0; i < oldval-newval; i++ ) {
-                remove_experiment(oldval-1-i);
-              }
-            } else if( newval > oldval ) {
-              for( var i = 0; i < newval-oldval; i++ ) {
-                add_experiment(oldval+i, experiment_ids, colors);
-              }
-            }
-            $('#id_form-TOTAL_FORMS').attr('value', newval );
+            update_experimentset( newval, oldval, experiment_ids, colors )
         },
 
         error : function(r,errmsg,err) {
@@ -104,8 +90,43 @@ function update_experiments() {
     });
 };
 
+function update_experimentset( newval, oldval, experiment_ids, colors ) {
+  if( newval < oldval ) {
+    // selection decreased to less than the number of experiments listed so clean
+    clean_experiments( newval );
+  } else if( newval > oldval ) {
+    // selection increased to greater than the number of experiments listed so add
+    add_experiments( newval, experiment_ids, colors );
+  } else {
+    // this handles back-cache conflict
+    // step 1 remove to clean out if the default selection is greater than the cached selection
+    clean_experiments( newval );
+    // step 2 add to update if the default selection is less than the cached selection
+    add_experiments( newval, experiment_ids, colors );
+  }
+  // update the formset hidden attributes
+  $('#id_form-TOTAL_FORMS').attr('value', newval );
+}
+
 function remove_experiment( idx ) {
+  // removes the specified experiment by jquery selector
   $(jq_experiment_div_key( idx )).remove();
+}
+
+function clean_experiments( idx ) {
+  // iterate over the set of selections beginning at the specified index and remove all divs if
+  // they exist
+  var count = $('#id_form-MAX_NUM_FORMS').attr('value');
+  for( var i = idx; i < count; i++ ) 
+    if( $(jq_experiment_div_key( i )).length )
+      $(jq_experiment_div_key( i )).remove();
+}
+
+function add_experiments( idx, experiment_ids, colors ) {
+  // iterate over all selections and add if the selection does not exist
+  for( var i = 0; i < idx; i++ ) 
+    if( !$(jq_experiment_div_key( i )).length ) 
+      add_experiment( i, experiment_ids, colors );
 }
 
 function add_experiment( idx, experiment_ids, colors ) {
@@ -249,7 +270,9 @@ $(function(){
 $(function(){
   $("#id_experiments").change(function(event){
     event.preventDefault();
-    update_experiments();
+    var newval = parseInt($('#id_experiments').val());
+    var oldval = parseInt($('#id_form-TOTAL_FORMS').attr('value'));
+    update_experiments( newval, oldval );
   });
 });
 
@@ -285,3 +308,14 @@ $(function(){
   });
 });
 
+$(function(){
+  $( document ).ready( function( ) {
+
+    var oldval = parseInt($('#id_experiments').val());
+    var newval = parseInt($('#id_form-TOTAL_FORMS').attr('value'));
+
+    update_experiments( newval, oldval );
+
+    $('#id_experiments option[value='+newval+']').prop('selected', true );
+  });
+});
