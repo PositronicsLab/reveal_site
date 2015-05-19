@@ -18,6 +18,7 @@ def index(request):
 def view(request):
   c = {}
   c.update(csrf(request))
+  db = revealdb()
 
   if request.method == 'POST':
 
@@ -35,8 +36,9 @@ def view(request):
     experiments = f.cleaned_data['experiments']
     xaxis = f.cleaned_data['xaxis']
     yaxis = f.cleaned_data['yaxis']
-    values = int( f.cleaned_data['samples'] )
-    analyzers = revealdb.find_analyzers({'scenario_id': scenario_id})
+    xaxis_lower = float( f.cleaned_data['xaxis_lower'] )
+    xaxis_upper = float( f.cleaned_data['xaxis_upper'] )
+    analyzers = db.find_analyzers({'scenario_id': scenario_id})
     analyzer = analyzers[0]
     i = 0
     x_idx = 0
@@ -53,14 +55,20 @@ def view(request):
     for xf in formset:
       exp_id = xf.cleaned_data['experiment']
       color = xf.cleaned_data['color']
-      ex_recs = revealdb.find_experiments({'experiment_id': exp_id})
-      an_recs = revealdb.find_analyses({'experiment_id': exp_id})
+#      ex_recs = db.find_experiments({'experiment_id': exp_id, 't':{'$gt':xaxis_lower, '$lt':xaxis_upper} })
+#      an_recs = db.find_analyses({'experiment_id': exp_id, 't':{'$gt':xaxis_lower, '$lt':xaxis_upper} })
+      an_recs = db.find_analyses({'experiment_id': exp_id, 'values.t':{'$gte':xaxis_lower, '$lte':xaxis_upper} })
       x = []
       y = []
 
-      print( values )
-      for i in range(0, values):
-        a = an_recs[i]
+#      print( values )
+#      for i in range(0, values):
+#        a = an_recs[i]
+#        d = dict(a.values[0])
+#        x.append(d[analyzer.keys[x_idx]])
+#        y.append(d[analyzer.keys[y_idx]])
+
+      for a in an_recs:
         d = dict(a.values[0])
         x.append(d[analyzer.keys[x_idx]])
         y.append(d[analyzer.keys[y_idx]])
@@ -106,7 +114,8 @@ def query(request):
 
 def service_ajax_post_request_scenario( request ):
   scenario = request.POST['scenario']
-  experimentset = revealdb.find_experiments({'scenario_id':scenario})
+  db = revealdb()
+  experimentset = db.find_experiments({'scenario_id':scenario})
   experiment_ids = [(e.experiment_id) for e in experimentset]
   colors=[]
   colors.append( 'blue' )
@@ -121,7 +130,8 @@ def service_ajax_post_request_scenario( request ):
 def service_ajax_post_request_experiments( request ):
   scenario = request.POST['scenario']
   experiments = request.POST['experiments']
-  experimentset = revealdb.find_experiments({'scenario_id':scenario})
+  db = revealdb()
+  experimentset = db.find_experiments({'scenario_id':scenario})
   experiment_ids = [(e.experiment_id) for e in experimentset]
   colors=[]
   colors.append( 'blue' )
@@ -133,26 +143,28 @@ def service_ajax_post_request_experiments( request ):
   axes = []
   for i in range( 0, len(analyzer.keys) ):
     axes.append( (analyzer.keys[i], analyzer.labels[i]) )
-  samples = []
-  samples.append( 15000 )
-  samples.append( 10000 )
-  samples.append( 5000 )
-  samples.append( 2000 )
-  samples.append( 1000 )
-  samples.append( 500 )
-  samples.append( 100 )
-  samples.append( 50 )
-  samples.append( 10 )
-  js = {'scenario':scenario, 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(colors), 'axes':json.dumps(axes), 'samples':json.dumps(samples) }
+#  samples = []
+#  samples.append( 15000 )
+#  samples.append( 10000 )
+#  samples.append( 5000 )
+#  samples.append( 2000 )
+#  samples.append( 1000 )
+#  samples.append( 500 )
+#  samples.append( 100 )
+#  samples.append( 50 )
+#  samples.append( 10 )
+#  js = {'scenario':scenario, 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(colors), 'axes':json.dumps(axes), 'samples':json.dumps(samples) }
+  js = {'scenario':scenario, 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(colors), 'axes':json.dumps(axes), }
   return JsonResponse( js )
 
 def service_ajax_post_request_experiment_stats( request ):
   scenario_id = request.POST['scenario']
   experiment_id = request.POST['experiment_id']
+  db = revealdb()
   query = {'scenario_id':scenario_id,'experiment_id':experiment_id}
-  resultset = revealdb.find_experiments( query )
+  resultset = db.find_experiments( query )
   if( not len(resultset) ):
     return JsonResponse( {'failed'} )
   e = resultset[0]
-  js = { 'min_time':e.min_time, 'max_time':e.max_time, 'samples':e.samples }
+  js = { 'min_time':e.min_time, 'max_time':e.max_time, 'samples':e.samples, 'time_step':e.time_step }
   return JsonResponse( js )

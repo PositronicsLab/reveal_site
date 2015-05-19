@@ -132,6 +132,7 @@ function add_experiments( idx, experiment_ids, colors ) {
 function add_experiment( idx, experiment_ids, colors ) {
   var html, key;
   html = '<div id='+html_experiment_div_key(idx)+'>';
+  html += '<hr>';
   html += '<p>';
   html += '<tr>';
   html += '<th><label for="'+html_experiment_select_key(idx)+'">Experiment:</label></th>';
@@ -148,8 +149,14 @@ function add_experiment( idx, experiment_ids, colors ) {
   html += '<td><input id="'+html_experiment_mintime_key(idx)+'" name="'+html_experiment_mintime_name(idx)+'" type="text" value="0.002" readonly /></td>'
   html += '<th><label for="'+html_experiment_maxtime_key(idx)+'">Maximum Time (s):</label></th>';
   html += '<td><input id="'+html_experiment_maxtime_key(idx)+'" name="'+html_experiment_maxtime_name(idx)+'" type="text" value="16.001" readonly /></td>'
+  html += '</tr>';
+  html += '</p>';
+  html += '<p>';
+  html += '<tr>';
   html += '<th><label for="'+html_experiment_samples_key(idx)+'">Samples:</label></th>';
   html += '<td><input id="'+html_experiment_samples_key(idx)+'" name="'+html_experiment_samples_name(idx)+'" type="text" value="16000" readonly /></td>'
+  html += '<th><label for="'+html_experiment_timestep_key(idx)+'">Time Step (s):</label></th>';
+  html += '<td><input id="'+html_experiment_timestep_key(idx)+'" name="'+html_experiment_timestep_name(idx)+'" type="text" value="0.001" readonly /></td>'
   html += '</tr>';
   html += '</p>';
   html += '</div>';
@@ -157,6 +164,12 @@ function add_experiment( idx, experiment_ids, colors ) {
 
   append_options( jq_experiment_select_key( idx ), experiment_ids, experiment_ids );
   append_options( jq_experiment_color_key( idx ), colors, colors );
+
+  // dynamically add a new event handler
+  $(jq_experiment_select_key(idx)).on( "change", function(){
+      event.preventDefault();
+      update_experiment_stats( idx );
+  });
 };
 
 function append_options( jq_key, keys, text ) {
@@ -175,6 +188,7 @@ function clear_options( jq_key ) {
 };
 
 function update_experiment_stats( idx ) {
+    console.log( "update_experiment_stats called for idx:" + idx );
     var key = jq_experiment_select_key( idx );
     $.ajax({
         url : "/query/",
@@ -191,10 +205,12 @@ function update_experiment_stats( idx ) {
             min_time = json.min_time;
             max_time = json.max_time;
             samples = json.samples;
+            time_step = json.time_step;
 
             $( jq_experiment_mintime_key(idx) ).val(min_time);
             $( jq_experiment_maxtime_key(idx) ).val(max_time);
             $( jq_experiment_samples_key(idx) ).val(samples);
+            $( jq_experiment_timestep_key(idx) ).val(time_step);
         },
 
         error : function(r,errmsg,err) {
@@ -260,6 +276,16 @@ function jq_experiment_samples_key( idx ) {
   return "#" + html_experiment_samples_key(idx);
 }
 
+function html_experiment_timestep_name( idx ) {
+  return "form-"+idx+"-time_step";
+}
+function html_experiment_timestep_key( idx ) {
+  return "id_"+html_experiment_timestep_name(idx);
+}
+function jq_experiment_timestep_key( idx ) {
+  return "#" + html_experiment_timestep_key(idx);
+}
+
 $(function(){
   $("#id_scenario").change(function(event){
     event.preventDefault();
@@ -276,6 +302,7 @@ $(function(){
   });
 });
 
+// event handlers for default configuration
 $(function(){
   $("#id_form-0-experiment").change(function(event){
     event.preventDefault();
@@ -292,6 +319,7 @@ $(function(){
   });
 });
 
+/*
 $(function(){
   $("#id_form-2-experiment").change(function(event){
     event.preventDefault();
@@ -307,7 +335,7 @@ $(function(){
     update_experiment_stats( idx );
   });
 });
-
+*/
 $(function(){
   $( document ).ready( function( ) {
 
