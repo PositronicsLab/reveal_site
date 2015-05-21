@@ -5,9 +5,6 @@
 <form action="/view/" method="POST" id="post-form">
     {% csrf_token %}
     <ul>
-{% comment %}
-    {{ form.as_p }}
-{% endcomment %}
     <div id="scenariodata">
     <p>
       <tr>
@@ -36,14 +33,11 @@
     </div>
     <div id="experimentset">
       {{ formset.management_form }}
+{% comment %}
+{% endcomment %}
       {% for f in formset %}
         <div id="experiment-{{ f.index }}">
 <hr>
-{% comment %}
-        <p>
-        {{ f.as_table }}
-        </p>
-{% endcomment %}
         <p>
         <tr>
           <th>{{ f.experiment.label_tag }}</th>
@@ -70,6 +64,8 @@
         </p>
         </div>
       {% endfor %}
+{% comment %}
+{% endcomment %}
     </div>
 <hr>
     <div id="plotset">
@@ -90,32 +86,9 @@
       <td>{{ form.yaxis }}</td>
       </tr>
     </p>
-{% comment %}
-    <p>
-      <th>{{ form.samples.label_tag }}</th>
-      <td>{{ form.samples }}</td>
-     </tr>
-    </p>
-{% endcomment %}
     </div>
-{% comment %}
-      {% for f in form.plot_form %}
-        <p>
-        {{ f.as_p }}
-        </p>
-      {% endfor %}
-{% endcomment %}
     </div>
     </ul>
     <input type="submit" value"Submit" />
 </form>
 
-{% comment %}
-<form action="/review/" method="post">
-    {% csrf_token %}
-    <ul>
-    {{ form.as_p }}
-    </ul>
-    <input type="submit" value"Submit" />
-</form>
-{% endcomment %}

@@ -12,6 +12,16 @@ from .revealdb import revealdb
 from .forms import ScenarioMultiForm, ExperimentForm
 from django.forms.formsets import formset_factory
 
+def get_colors():
+  colors=[]
+  colors.append( 'blue' )
+  colors.append( 'green' )
+  colors.append( 'red' )
+  colors.append( 'cyan' )
+  colors.append( 'magenta' )
+  colors.append( 'yellow' )
+  return colors
+
 def index(request):
   return view( request )
 
@@ -22,7 +32,8 @@ def view(request):
 
   if request.method == 'POST':
 
-    ExperimentFormset = formset_factory(ExperimentForm, extra=2, max_num=4)
+    #ExperimentFormset = formset_factory(ExperimentForm, extra=2, max_num=4)
+    ExperimentFormset = formset_factory(ExperimentForm, max_num=4)
     formset = ExperimentFormset( request.POST )
     f = ScenarioMultiForm( request.POST )
 
@@ -55,18 +66,9 @@ def view(request):
     for xf in formset:
       exp_id = xf.cleaned_data['experiment']
       color = xf.cleaned_data['color']
-#      ex_recs = db.find_experiments({'experiment_id': exp_id, 't':{'$gt':xaxis_lower, '$lt':xaxis_upper} })
-#      an_recs = db.find_analyses({'experiment_id': exp_id, 't':{'$gt':xaxis_lower, '$lt':xaxis_upper} })
       an_recs = db.find_analyses({'experiment_id': exp_id, 'values.t':{'$gte':xaxis_lower, '$lte':xaxis_upper} })
       x = []
       y = []
-
-#      print( values )
-#      for i in range(0, values):
-#        a = an_recs[i]
-#        d = dict(a.values[0])
-#        x.append(d[analyzer.keys[x_idx]])
-#        y.append(d[analyzer.keys[y_idx]])
 
       for a in an_recs:
         d = dict(a.values[0])
@@ -78,8 +80,8 @@ def view(request):
     plt.xlabel( analyzer.labels[x_idx] )
     plt.ylabel( analyzer.labels[y_idx] )
 
-    plugins.clear(fig)  # clear all plugins from the figure
-    #plugins.connect(fig, plugins.Reset(), plugins.BoxZoom(), plugins.Zoom())
+    #plugins.clear(fig)  # clear all plugins from the figure
+    #plugins.connect(fig, plugins.Reset(), plugins.Zoom(), plugins.BoxZoom())
 
     fig_json = json.dumps(mpld3.fig_to_dict( fig ))
     template = loader.get_template('review/plot.html')
@@ -90,7 +92,8 @@ def view(request):
   else:  # GET
     f = ScenarioMultiForm()
 
-    ExperimentFormset = formset_factory(ExperimentForm, extra=2, max_num=4)
+    #ExperimentFormset = formset_factory(ExperimentForm, extra=2, max_num=4)
+    ExperimentFormset = formset_factory(ExperimentForm, max_num=4)
     formset = ExperimentFormset()
     i = 0
     for fs in formset:
@@ -113,19 +116,17 @@ def query(request):
       return service_ajax_post_request_experiment_stats( request )
 
 def service_ajax_post_request_scenario( request ):
-  scenario = request.POST['scenario']
+  scenario_id = request.POST['scenario']
   db = revealdb()
-  experimentset = db.find_experiments({'scenario_id':scenario})
-  experiment_ids = [(e.experiment_id) for e in experimentset]
-  colors=[]
-  colors.append( 'blue' )
-  colors.append( 'green' )
-  colors.append( 'red' )
-  colors.append( 'cyan' )
-  colors.append( 'magenta' )
-  colors.append( 'yellow' )
-  js = {'scenario':scenario, 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(colors) }
-  return JsonResponse( js )
+  result = db.find_scenarios( {'scenario_id':scenario_id} )
+  if result:
+    scenario = result[0]
+    experimentset = db.find_experiments( {'scenario_id':scenario.scenario_id} )
+    experiment_ids = [(e.experiment_id) for e in experimentset]
+    js = {'scenario':scenario.to_JSON(), 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(get_colors()) }
+    return JsonResponse( js )
+  else:
+    return JsonResponse()
 
 def service_ajax_post_request_experiments( request ):
   scenario = request.POST['scenario']
@@ -133,28 +134,10 @@ def service_ajax_post_request_experiments( request ):
   db = revealdb()
   experimentset = db.find_experiments({'scenario_id':scenario})
   experiment_ids = [(e.experiment_id) for e in experimentset]
-  colors=[]
-  colors.append( 'blue' )
-  colors.append( 'green' )
-  colors.append( 'red' )
-  colors.append( 'cyan' )
-  colors.append( 'magenta' )
-  colors.append( 'yellow' )
   axes = []
   for i in range( 0, len(analyzer.keys) ):
     axes.append( (analyzer.keys[i], analyzer.labels[i]) )
-#  samples = []
-#  samples.append( 15000 )
-#  samples.append( 10000 )
-#  samples.append( 5000 )
-#  samples.append( 2000 )
-#  samples.append( 1000 )
-#  samples.append( 500 )
-#  samples.append( 100 )
-#  samples.append( 50 )
-#  samples.append( 10 )
-#  js = {'scenario':scenario, 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(colors), 'axes':json.dumps(axes), 'samples':json.dumps(samples) }
-  js = {'scenario':scenario, 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(colors), 'axes':json.dumps(axes), }
+  js = {'scenario':scenario, 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(get_colors()), 'axes':json.dumps(axes), }
   return JsonResponse( js )
 
 def service_ajax_post_request_experiment_stats( request ):

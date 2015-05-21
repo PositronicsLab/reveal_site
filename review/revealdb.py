@@ -1,5 +1,7 @@
 from pymongo import MongoClient
 from pymongo import ASCENDING, DESCENDING
+import json
+#from django.core import serializers
 
 #------------------------------------------------------------------------------
 class revealdb:
@@ -95,6 +97,14 @@ class Session:
 
 #------------------------------------------------------------------------------
 class Scenario:
+  _id = ""
+  scenario_id = ""
+  description = ""
+  samples = 0
+  sample_rate = 0.0
+  sample_start_time = 0.0
+  sample_end_time = 0.0
+  uris = []
   def __init__(self):
     self._id = ""
     self.scenario_id = ""
@@ -124,6 +134,9 @@ class Scenario:
     self.uris = []
     self.trials = trials
 #    self.steps_per_trial = kwargs['steps_per_trial']
+  def to_JSON(self):
+    return json.dumps( { 'sample_start_time': self.sample_start_time, 'description': self.description, 'sample_end_time': self.sample_end_time, 'sample_rate': self.sample_rate, 'samples': self.samples, 'scenario_id': self.scenario_id } )
+    
 
 #------------------------------------------------------------------------------
 class Experiment:
