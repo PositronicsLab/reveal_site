@@ -152,6 +152,7 @@ class Experiment:
     self.min_time = 0.0
     self.max_time = 0.0
     self.samples = 0
+    self.intermediate_trials = 0
   def __init__(self, **kwargs):
     self._id = kwargs['_id']
     self.experiment_id = str(kwargs['experiment_id'])
@@ -161,6 +162,7 @@ class Experiment:
     self.end_time = kwargs['end_time']
     self.time_step = kwargs['time_step']
     self.epsilon = kwargs['epsilon']
+    self.intermediate_trials = kwargs['intermediate_trials']
     self.get_stats()
   def get_stats(self):
     db = revealdb()

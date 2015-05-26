@@ -185,6 +185,11 @@ function add_experiment( idx, experiment_ids, colors ) {
   html += readonlytextfield_html( html_experiment_timestep_key(idx), html_experiment_timestep_name(idx), "Time Step (s)" );
   html += '</tr>';
   html += '</p>';
+  html += '<p>';
+  html += '<tr>';
+  html += readonlytextfield_html( html_experiment_intermediatetrials_key(idx), html_experiment_intermediatetrials_name(idx), "Intermediate Trials Ignored" );
+  html += '</tr>';
+  html += '</p>';
   html += '</div>';
   $('#experimentset').append( html );
 
@@ -232,11 +237,13 @@ function update_experiment_stats( idx ) {
       max_time = json.max_time;
       samples = json.samples;
       time_step = json.time_step;
+      intermediate_trials = json.intermediate_trials;
 
       $( jq_experiment_mintime_key(idx) ).val(min_time);
       $( jq_experiment_maxtime_key(idx) ).val(max_time);
       $( jq_experiment_samples_key(idx) ).val(samples);
       $( jq_experiment_timestep_key(idx) ).val(time_step);
+      $( jq_experiment_intermediatetrials_key(idx) ).val(intermediate_trials);
     },
 
     error : function(r,errmsg,err) {
@@ -310,6 +317,16 @@ function html_experiment_timestep_key( idx ) {
 }
 function jq_experiment_timestep_key( idx ) {
   return "#" + html_experiment_timestep_key(idx);
+}
+
+function html_experiment_intermediatetrials_name( idx ) {
+  return "form-"+idx+"-intermediate_trials";
+}
+function html_experiment_intermediatetrials_key( idx ) {
+  return "id_"+html_experiment_intermediatetrials_name(idx);
+}
+function jq_experiment_intermediatetrials_key( idx ) {
+  return "#" + html_experiment_intermediatetrials_key(idx);
 }
 
 $(function(){

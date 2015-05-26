@@ -11,12 +11,14 @@ class ExperimentForm(forms.Form):
   max_time = forms.CharField( label='Maximum Time (s):' )
   samples = forms.CharField( label='Samples:' )
   time_step = forms.CharField( label='Time Step (s):' )
+  intermediate_trials = forms.CharField( label='Intermediate Trials Ignored:' )
   def __init__(self, *args, **kwargs):
     super(ExperimentForm,self).__init__(*args,**kwargs)
     self.fields['min_time'].widget.attrs['readonly'] = True
     self.fields['max_time'].widget.attrs['readonly'] = True
     self.fields['samples'].widget.attrs['readonly'] = True
     self.fields['time_step'].widget.attrs['readonly'] = True
+    self.fields['intermediate_trials'].widget.attrs['readonly'] = True
     try:
       scenario_id = self.data['scenario']
       print(scenario_id)
@@ -42,6 +44,7 @@ class ExperimentForm(forms.Form):
     self.fields['max_time'].initial = experimentset[0].max_time
     self.fields['samples'].initial = experimentset[0].samples
     self.fields['time_step'].initial = experimentset[0].time_step
+    self.fields['intermediate_trials'].initial = experimentset[0].intermediate_trials
 
 class ScenarioMultiForm(forms.Form):
   scenario = forms.ChoiceField( label='Scenario', required = True )

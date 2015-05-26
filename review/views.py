@@ -149,5 +149,5 @@ def service_ajax_post_request_experiment_stats( request ):
   if( not len(resultset) ):
     return JsonResponse( {'failed'} )
   e = resultset[0]
-  js = { 'min_time':e.min_time, 'max_time':e.max_time, 'samples':e.samples, 'time_step':e.time_step }
+  js = { 'min_time':e.min_time, 'max_time':e.max_time, 'samples':e.samples, 'time_step':e.time_step, 'intermediate_trials':e.intermediate_trials }
   return JsonResponse( js )
