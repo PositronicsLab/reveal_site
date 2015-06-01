@@ -221,14 +221,12 @@ class Analyzer:
     self._id = ""
     self.scenario_id = ""
     self.type = 0
-    self.file = 0
     self.keys = []
     self.labels = []
   def __init__(self, **kwargs):
     self._id = kwargs['_id']
     self.scenario_id = kwargs['scenario_id']
     self.type = kwargs['type']
-    self.file = kwargs['filename']
     self.keys = kwargs['keys']
     self.labels = kwargs['labels']
 
