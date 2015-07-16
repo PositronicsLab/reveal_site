@@ -3,7 +3,29 @@ from django.forms.formsets import BaseFormSet
 from django.forms.formsets import formset_factory
 from .revealdb import revealdb
 
+class FormException(Exception):
+  pass
+
+class ErrorReportForm(forms.Form):
+  has_messages = False
+  messages = forms.CharField( widget=forms.Textarea )
+  def __init__(self, *args, **kwargs):
+    super(ErrorReportForm,self).__init__(*args,**kwargs)
+    self.fields['messages'].widget.attrs['readonly'] = True
+    self.fields['messages'].widget.attrs['rows'] = 10
+    self.fields['messages'].widget.attrs['cols'] = 100
+#    self.fields['messages'].initial = 'Reported errors:'
+  def add(self, msg ):
+    txt = ''
+    if not self.has_messages:
+      self.has_messages = True
+      txt = msg
+    else:
+      txt = self.fields['messages'].initial + '\n' + msg
+    self.fields['messages'].initial = txt
+
 class ExperimentForm(forms.Form):
+  #valid = True
   index = 0
   experiment = forms.ChoiceField( label='Experiment', required = True )
   color = forms.ChoiceField( label='Color', required = True )
@@ -24,7 +46,10 @@ class ExperimentForm(forms.Form):
       print(scenario_id)
       self.load_experiments(scenario_id)
     except:
-      print('a')
+      #raise FormException('failed to load experiment for requested scenario')
+      errstr = 'failed to load experiment for requested scenario'
+      #print(errstr)
+    #  valid = False
     self.load_colors()
   def load_colors(self):
     colors = []
@@ -37,14 +62,20 @@ class ExperimentForm(forms.Form):
     self.fields['color'].choices = colors
   def load_experiments(self, scenario_id):
     db = revealdb()
-    experimentset = db.find_experiments({'scenario_id':scenario_id})
-    experiment_ids = [(e.experiment_id,e.experiment_id) for e in experimentset]
+    results = db.find_experiments({'scenario_id':scenario_id})
+    experiment_set = results['experiments']
+    errors = results['errors']
+    experiment_ids = [(e.experiment_id,e.experiment_id) for e in experiment_set]
     self.fields['experiment'].choices = experiment_ids
-    self.fields['min_time'].initial = experimentset[0].min_time
-    self.fields['max_time'].initial = experimentset[0].max_time
-    self.fields['samples'].initial = experimentset[0].samples
-    self.fields['time_step'].initial = experimentset[0].time_step
-    self.fields['intermediate_trials'].initial = experimentset[0].intermediate_trials
+    if( len(experiment_ids) ):
+      self.fields['min_time'].initial = experiment_set[0].min_time
+      self.fields['max_time'].initial = experiment_set[0].max_time
+      self.fields['samples'].initial = experiment_set[0].samples
+      self.fields['time_step'].initial = experiment_set[0].time_step
+      self.fields['intermediate_trials'].initial = experiment_set[0].intermediate_trials
+    else:
+      errors.append('no experiments for found for the requested scenario')
+    return errors
 
 class ScenarioMultiForm(forms.Form):
   scenario = forms.ChoiceField( label='Scenario', required = True )
@@ -58,17 +89,20 @@ class ScenarioMultiForm(forms.Form):
   xaxis_lower = forms.CharField( label='Lower Bound:', required = True )
   xaxis_upper = forms.CharField( label='Upper Bound:', required = True )
   yaxis = forms.ChoiceField( label='y-axis', required = True )
-#  yaxis_lower = forms.CharField( label='Lower Bound:', required = True )
-#  yaxis_upper = forms.CharField( label='Upper Bound:', required = True )
-#  samples = forms.ChoiceField( label='How many samples to view?', required = True )
 
   def __init__(self, *args, **kwargs):
     super(ScenarioMultiForm,self).__init__(*args,**kwargs)
     self.populate()
   def populate(self):
     db = revealdb()
-    scenario_set = db.find_scenarios({})
+    results = db.find_scenarios({})
+    scenario_set = results['scenarios']
+    errors = results['errors']
+#    if not scenario_set:
+#      return
     scenarios = [(s.scenario_id,s.description) for s in scenario_set]
+#    if not scenarios:
+#      return
     self.fields['scenario'].choices = scenarios
     self.scenario_id = scenario_set[0].scenario_id
     self.fields['samples'].initial = scenario_set[0].samples
@@ -90,18 +124,4 @@ class ScenarioMultiForm(forms.Form):
     self.fields['yaxis'].choices = axes
     if( len(analyzer.keys) > 1 ):
       self.fields['yaxis'].initial = analyzer.keys[1]
-
-
-#    maxsamples = revealdb.count_trials({'scenario_id':self.scenario_id}) #?? filter
-#    samples = []
-#    samples.append( (15000,15000) )
-#    samples.append( (10000,10000) )
-#    samples.append( (5000,5000) )
-#    samples.append( (2000,2000) )
-#    samples.append( (1000,1000) )
-#    samples.append( (500,500) )
-#    samples.append( (100,100) )
-#    samples.append( (50,50) )
-#    samples.append( (10,10) )
-#    self.fields['samples'].choices = samples
 

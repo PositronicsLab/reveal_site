@@ -9,8 +9,10 @@ import mpld3
 from mpld3 import plugins
 import json
 from .revealdb import revealdb
-from .forms import ScenarioMultiForm, ExperimentForm
+from .forms import ScenarioMultiForm, ExperimentForm, ErrorReportForm
 from django.forms.formsets import formset_factory
+
+errors = ErrorReportForm()
 
 def get_colors():
   colors=[]
@@ -91,17 +93,21 @@ def view(request):
     return HttpResponse(template.render(context))
   else:  # GET
     f = ScenarioMultiForm()
-
-    #ExperimentFormset = formset_factory(ExperimentForm, extra=2, max_num=4)
     ExperimentFormset = formset_factory(ExperimentForm, max_num=4)
     formset = ExperimentFormset()
-    i = 0
-    for fs in formset:
-      fs.load_experiments(f.scenario_id)
-      fs.index = i
-      i = i + 1
- 
-    return render(request, "review/index.html", {'form':f, 'formset':formset })
+
+    if f.scenario_id == None:
+      errors.add('no scenarios exist in database')
+    else:
+      i = 0
+      for ef in formset:
+        errs = ef.load_experiments(f.scenario_id)
+        ef.index = i
+        i = i + 1
+        for err in errs:
+          errors.add( err )
+
+    return render(request, "review/index.html", {'form':f, 'formset':formset, 'errors':errors} )
 
 def query(request):
   c = {}
@@ -118,11 +124,15 @@ def query(request):
 def service_ajax_post_request_scenario( request ):
   scenario_id = request.POST['scenario']
   db = revealdb()
-  result = db.find_scenarios( {'scenario_id':scenario_id} )
-  if result:
-    scenario = result[0]
-    experimentset = db.find_experiments( {'scenario_id':scenario.scenario_id} )
-    experiment_ids = [(e.experiment_id) for e in experimentset]
+  results = db.find_scenarios( {'scenario_id':scenario_id} )
+  scenario_set = results['scenarios']
+  query_errors = results['errors']
+  if scenario_set:
+    scenario = scenario_set[0]
+    print( scenario )
+    results = db.find_experiments( {'scenario_id':scenario.scenario_id} )
+    experiment_set = results['experiments']
+    experiment_ids = [(e.experiment_id) for e in experiment_set]
     js = {'scenario':scenario.to_JSON(), 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(get_colors()) }
     return JsonResponse( js )
   else:
@@ -132,8 +142,10 @@ def service_ajax_post_request_experiments( request ):
   scenario = request.POST['scenario']
   experiments = request.POST['experiments']
   db = revealdb()
-  experimentset = db.find_experiments({'scenario_id':scenario})
-  experiment_ids = [(e.experiment_id) for e in experimentset]
+  results = db.find_experiments({'scenario_id':scenario})
+  experiment_set = results['experiments']
+  query_errors = results['errors']
+  experiment_ids = [(e.experiment_id) for e in experiment_set]
   axes = []
   for i in range( 0, len(analyzer.keys) ):
     axes.append( (analyzer.keys[i], analyzer.labels[i]) )
@@ -145,9 +157,11 @@ def service_ajax_post_request_experiment_stats( request ):
   experiment_id = request.POST['experiment_id']
   db = revealdb()
   query = {'scenario_id':scenario_id,'experiment_id':experiment_id}
-  resultset = db.find_experiments( query )
-  if( not len(resultset) ):
+  results = db.find_experiments( query )
+  experiment_set = results['experiments']
+  query_errors = results['errors']
+  if( not len(experiment_set) ):
     return JsonResponse( {'failed'} )
-  e = resultset[0]
+  e = experiment_set[0]
   js = { 'min_time':e.min_time, 'max_time':e.max_time, 'samples':e.samples, 'time_step':e.time_step, 'intermediate_trials':e.intermediate_trials }
   return JsonResponse( js )

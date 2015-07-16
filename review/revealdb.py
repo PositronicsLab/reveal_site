@@ -35,20 +35,40 @@ class revealdb:
   def count_trials( self, query ):
     return self.count_records( 'trial', query )
   def find_sessions( self, query ):
+    sessions = []
+    errors = []
     cursor = self.find_records( 'session', query )
-    return [Session( **doc ) for doc in cursor]
+    for doc in cursor:
+      try:
+        session = Session( **doc )
+        sessions.append( session )
+      except:
+        errors.append('ignoring corrupted session record [session_id:' + doc['session_id']+']')
+    return {'sessions':sessions, 'errors':errors}
   def find_experiments( self, query ):
+    experiments = []
+    errors = []
     cursor = self.find_records( 'experiment', query )
-    return [Experiment( **doc ) for doc in cursor]
+    for doc in cursor:
+      try:
+        experiment = Experiment( **doc )
+        experiments.append( experiment )
+      except:
+        errors.append('ignoring corrupted experiment record [experiment_id:' + doc['experiment_id']+']')
+    return {'experiments':experiments, 'errors':errors}
   def find_scenarios( self, query ):
-    cursor = self.find_records( 'scenario', query )
     scenarios = []
+    errors = []
+    cursor = self.find_records( 'scenario', query )
     for doc in cursor:
       models = self.count_models( {'scenario_id':doc['scenario_id']} )
       trials = self.count_trials( {'scenario_id':doc['scenario_id']} )
-      scenario = Scenario( models, trials, **doc )
-      scenarios.append( scenario )
-    return scenarios 
+      try:
+        scenario = Scenario( models, trials, **doc )
+        scenarios.append( scenario )
+      except:
+        errors.append('ignoring corrupted scenario record [scenario_id:' + doc['scenario_id']+']')
+    return {'scenarios':scenarios, 'errors':errors}
   def find_trials( self, query ):
     cursor = self.find_records( 'trial', query )
     return [Trial( **doc ) for doc in cursor]

@@ -3,98 +3,103 @@
 <script type="text/javascript" src={% static "review/jquery-1.11.2.js" %}></script>
 <script type="text/javascript" src={% static "review/scenario.js" %} ></script>
 <form action="/view/" method="POST" id="post-form">
-    {% csrf_token %}
-    <ul>
-    <div id="scenariodata">
-    <p>
-      <tr>
-      <th>{{ form.scenario.label_tag }}</th>
-      <td>{{ form.scenario }}</td>
-      <th>{{ form.experiments.label_tag }}</th>
-      <td>{{ form.experiments }}</td>
-      </tr>
-    </p>
-    <p>
-      <tr>
-      <th>{{ form.sample_start_time.label_tag }}</th>
-      <td>{{ form.sample_start_time }}</td>
-      <th>{{ form.sample_end_time.label_tag }}</th>
-      <td>{{ form.sample_end_time }}</td>
-      </tr>
-    </p>
-    <p>
-      <tr>
-      <th>{{ form.samples.label_tag }}</th>
-      <td>{{ form.samples }}</td>
-      <th>{{ form.sample_rate.label_tag }}</th>
-      <td>{{ form.sample_rate }}</td>
-      </tr>
-    </p>
-    </div>
-    <div id="experimentset">
-      {{ formset.management_form }}
+  {% csrf_token %}
+  <ul>
+  <div id="scenariodata">
+  <p>
+    <tr>
+    <th>{{ form.scenario.label_tag }}</th>
+    <td>{{ form.scenario }}</td>
+    <th>{{ form.experiments.label_tag }}</th>
+    <td>{{ form.experiments }}</td>
+    </tr>
+  </p>
+  <p>
+    <tr>
+    <th>{{ form.sample_start_time.label_tag }}</th>
+    <td>{{ form.sample_start_time }}</td>
+    <th>{{ form.sample_end_time.label_tag }}</th>
+    <td>{{ form.sample_end_time }}</td>
+    </tr>
+  </p>
+  <p>
+    <tr>
+    <th>{{ form.samples.label_tag }}</th>
+    <td>{{ form.samples }}</td>
+    <th>{{ form.sample_rate.label_tag }}</th>
+    <td>{{ form.sample_rate }}</td>
+    </tr>
+  </p>
+  </div>
+  <div id="experimentset">
+    {{ formset.management_form }}
 {% comment %}
 {% endcomment %}
-      {% for f in formset %}
-        <div id="experiment-{{ f.index }}">
-<hr>
-        <p>
-        <tr>
-          <th>{{ f.experiment.label_tag }}</th>
-          <td>{{ f.experiment }}</td>
-          <th>{{ f.color.label_tag }}</th>
-          <td>{{ f.color }}</td>
-        </tr>
-        </p>
-        <p>
-        <tr>
-          <th>{{ f.min_time.label_tag }}</th>
-          <td>{{ f.min_time }}</td>
-          <th>{{ f.max_time.label_tag }}</th>
-          <td>{{ f.max_time }}</td>
-        </tr>
-        </p>
-        <p>
-        <tr>
-          <th>{{ f.samples.label_tag }}</th>
-          <td>{{ f.samples }}</td>
-          <th>{{ f.time_step.label_tag }}</th>
-          <td>{{ f.time_step }}</td>
-        </tr>
-        </p>
-        <p>
-        <tr>
-          <th>{{ f.intermediate_trials.label_tag }}</th>
-          <td>{{ f.intermediate_trials }}</td>
-        </tr>
-        </p>
-        </div>
-      {% endfor %}
+    {% for f in formset %}
+      <div id="experiment-{{ f.index }}">
+      <hr>
+      <p>
+      <tr>
+        <th>{{ f.experiment.label_tag }}</th>
+        <td>{{ f.experiment }}</td>
+        <th>{{ f.color.label_tag }}</th>
+        <td>{{ f.color }}</td>
+      </tr>
+      </p>
+      <p>
+      <tr>
+        <th>{{ f.min_time.label_tag }}</th>
+        <td>{{ f.min_time }}</td>
+        <th>{{ f.max_time.label_tag }}</th>
+        <td>{{ f.max_time }}</td>
+      </tr>
+      </p>
+      <p>
+      <tr>
+        <th>{{ f.samples.label_tag }}</th>
+        <td>{{ f.samples }}</td>
+        <th>{{ f.time_step.label_tag }}</th>
+        <td>{{ f.time_step }}</td>
+      </tr>
+      </p>
+      <p>
+      <tr>
+        <th>{{ f.intermediate_trials.label_tag }}</th>
+        <td>{{ f.intermediate_trials }}</td>
+      </tr>
+      </p>
+      </div>
+    {% endfor %}
 {% comment %}
 {% endcomment %}
-    </div>
-<hr>
-    <div id="plotset">
-    <div id="scenariodata">
-    <p>
-      <tr>
-      <th>{{ form.xaxis.label_tag }}</th>
-      <td>{{ form.xaxis }}</td>
-      <th>{{ form.xaxis_lower.label_tag }}</th>
-      <td>{{ form.xaxis_lower }}</td>
-      <th>{{ form.xaxis_upper.label_tag }}</th>
-      <td>{{ form.xaxis_upper }}</td>
-      </tr>
-    </p>
-    <p>
-      <tr>
-      <th>{{ form.yaxis.label_tag }}</th>
-      <td>{{ form.yaxis }}</td>
-      </tr>
-    </p>
-    </div>
-    </div>
-    </ul>
-    <input type="submit" value"Submit" />
+  </div>
+  <hr>
+  <div id="plotset">
+  <div id="scenariodata">
+  <p>
+    <tr>
+    <th>{{ form.xaxis.label_tag }}</th>
+    <td>{{ form.xaxis }}</td>
+    <th>{{ form.xaxis_lower.label_tag }}</th>
+    <td>{{ form.xaxis_lower }}</td>
+    <th>{{ form.xaxis_upper.label_tag }}</th>
+    <td>{{ form.xaxis_upper }}</td>
+    </tr>
+  </p>
+  <p>
+    <tr>
+    <th>{{ form.yaxis.label_tag }}</th>
+    <td>{{ form.yaxis }}</td>
+    </tr>
+  </p>
+  </div>
+  </div>
+  </ul>
+  <input type="submit" value"Submit" />
 </form>
-
+<hr>
+{% if errors.has_messages %}
+  <div id="error_report">
+    {{ errors.messages }}
+  </div>
+{% endif %}
