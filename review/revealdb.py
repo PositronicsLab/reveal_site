@@ -11,7 +11,7 @@ class revealdb:
   def __init__( self ):
     self.host = 'localhost'
     self.port = 27017
-    self.dbname = 'revealdb'
+    self.dbname = 'reveal_samples'
   def get_collection( self, str ):
     client = MongoClient( self.host, self.port )
     db = client[self.dbname]
