@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse, Http404, JsonResponse
+from django.http import HttpResponse, Http404, JsonResponse, QueryDict
 from django.template import RequestContext, loader
 from django.template.context_processors import csrf
 from matplotlib import pyplot as plt
@@ -34,12 +34,15 @@ def view(request):
 
   if request.method == 'POST':
 
+    scenario_id = request.POST.get( "scenario" )
+
     #ExperimentFormset = formset_factory(ExperimentForm, extra=2, max_num=4)
     ExperimentFormset = formset_factory(ExperimentForm, max_num=4)
     formset = ExperimentFormset( request.POST )
-    f = ScenarioMultiForm( request.POST )
+    f = ScenarioMultiForm( scenario_id, request.POST )
 
     if not f.is_valid():
+      #print( f.errors )
       raise Http404("form not valid")
 
     if not formset.is_valid():
@@ -92,7 +95,7 @@ def view(request):
     })
     return HttpResponse(template.render(context))
   else:  # GET
-    f = ScenarioMultiForm()
+    f = ScenarioMultiForm( None )
     ExperimentFormset = formset_factory(ExperimentForm, max_num=4)
     formset = ExperimentFormset()
 
@@ -133,7 +136,31 @@ def service_ajax_post_request_scenario( request ):
     results = db.find_experiments( {'scenario_id':scenario.scenario_id} )
     experiment_set = results['experiments']
     experiment_ids = [(e.experiment_id) for e in experiment_set]
-    js = {'scenario':scenario.to_JSON(), 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(get_colors()) }
+    #TODO: need to update axes information also
+    # Note: the following is recreated here from forms along with other cases.
+    # Target a refactor for these duplicate logic to roll into specialized class
+    analyzers = db.find_analyzers({'scenario_id': scenario.scenario_id})
+    analyzer = analyzers[0]
+    axes = []
+    for i in range( 0, len(analyzer.keys) ):
+      axes.append( (analyzer.keys[i], analyzer.labels[i]) )
+    min_time = scenario.sample_start_time
+    max_time = scenario.sample_end_time
+
+    axes_filters = { 'axes':axes, 'min_time':min_time, 'max_time':max_time }
+
+#    self.fields['xaxis'].choices = axes
+#    if( len(analyzer.keys) ):
+#      self.fields['xaxis'].initial = analyzer.keys[0]
+#      self.fields['xaxis_lower'].initial = scenario_set[0].sample_start_time
+#      self.fields['xaxis_upper'].initial = scenario_set[0].sample_end_time
+#    self.fields['yaxis'].choices = axes
+#    if( len(analyzer.keys) > 1 ):
+#      self.fields['yaxis'].initial = analyzer.keys[1]
+
+    #lowerbound, upperbound, axes
+
+    js = {'scenario':scenario.to_JSON(), 'experiment_ids':json.dumps(experiment_ids), 'colors':json.dumps(get_colors()), 'axes_filters':json.dumps(axes_filters )}
     return JsonResponse( js )
   else:
     return JsonResponse()

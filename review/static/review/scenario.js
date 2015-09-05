@@ -55,7 +55,7 @@ function update_scenario() {
       $('#id_sample_rate').attr('value', s.sample_rate ); 
       experiment_ids = JSON.parse(json.experiment_ids);
       colors = JSON.parse(json.colors);
-      axes = json.axes;
+      axes_filters = JSON.parse(json.axes_filters);
 
       var experiments = parseInt($('#id_form-TOTAL_FORMS').attr('value'));
       console.log( "experiments: " + experiments );
@@ -65,6 +65,8 @@ function update_scenario() {
         update_experiment_stats(i);
       }
       // TODO: update other scenario specific controls, e.g. stats and axes
+      update_filters( axes_filters );
+
     },
 
     error : function(r,errmsg,err) {
@@ -124,6 +126,35 @@ function update_experimentset( newval, oldval, experiment_ids, colors ) {
   }
   // update the formset hidden attributes
   $('#id_form-TOTAL_FORMS').attr('value', newval );
+}
+
+function update_filters( axes_filters ) {
+
+  min_time = axes_filters['min_time'];
+  max_time = axes_filters['max_time'];
+  axes = axes_filters['axes'];
+
+  console.log( "min_time: " + min_time );
+  console.log( "max_time: " + max_time );
+  //console.log( "axes: " + axes + " length:" + axes.length );
+
+  keys = [];
+  values = [];
+  for( var i = 0; i < axes.length; i++ ) {
+    keys.push( axes[i][0] );
+    values.push( axes[i][1] );
+  }
+  console.log( "keys: " + keys );
+  console.log( "values: " + values );
+
+  clear_options( '#id_xaxis' );
+  clear_options( '#id_yaxis' );
+  append_options( '#id_xaxis', keys, values, 0 );
+  append_options( '#id_yaxis', keys, values, 1 );
+
+  $('#id_xaxis_lower').attr('value', min_time );
+  $('#id_xaxis_upper').attr('value', max_time );
+
 }
 
 function remove_experiment( idx ) {
@@ -203,9 +234,14 @@ function add_experiment( idx, experiment_ids, colors ) {
   });
 };
 
-function append_options( jq_key, keys, text ) {
+function append_options( jq_key, keys, text, selected ) {
+  //console.log(keys);
   for( var i = 0; i < keys.length; i++) {
-    html = '<option value="'+keys[i]+'">'+text[i]+'</option>';
+    html = '<option value="'+keys[i]+'"';
+    if( i == selected ) {
+      html += ' selected="selected"';
+    }
+    html += '>'+text[i]+'</option>';
     $(jq_key).append(html);
   }
 };

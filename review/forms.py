@@ -43,7 +43,7 @@ class ExperimentForm(forms.Form):
     self.fields['intermediate_trials'].widget.attrs['readonly'] = True
     try:
       scenario_id = self.data['scenario']
-      print(scenario_id)
+      #print(scenario_id)
       self.load_experiments(scenario_id)
     except:
       #raise FormException('failed to load experiment for requested scenario')
@@ -90,9 +90,12 @@ class ScenarioMultiForm(forms.Form):
   xaxis_upper = forms.CharField( label='Upper Bound:', required = True )
   yaxis = forms.ChoiceField( label='y-axis', required = True )
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, scenario_id, *args, **kwargs):
     super(ScenarioMultiForm,self).__init__(*args,**kwargs)
+    if( scenario_id != None ):
+      self.scenario_id = scenario_id
     self.populate()
+    
   def populate(self):
     db = revealdb()
     results = db.find_scenarios({})
@@ -104,11 +107,19 @@ class ScenarioMultiForm(forms.Form):
 #    if not scenarios:
 #      return
     self.fields['scenario'].choices = scenarios
-    self.scenario_id = scenario_set[0].scenario_id
-    self.fields['samples'].initial = scenario_set[0].samples
-    self.fields['sample_rate'].initial = scenario_set[0].sample_rate
-    self.fields['sample_start_time'].initial = scenario_set[0].sample_start_time
-    self.fields['sample_end_time'].initial = scenario_set[0].sample_end_time
+    idx = 0;
+
+    if( self.scenario_id != None ):
+      for i in range( 0, len(scenario_set) ):
+        if( self.scenario_id == scenario_set[i].scenario_id ):
+          idx = i
+          break
+    #print( "idx: " + str(idx) )
+    self.scenario_id = scenario_set[idx].scenario_id
+    self.fields['samples'].initial = scenario_set[idx].samples
+    self.fields['sample_rate'].initial = scenario_set[idx].sample_rate
+    self.fields['sample_start_time'].initial = scenario_set[idx].sample_start_time
+    self.fields['sample_end_time'].initial = scenario_set[idx].sample_end_time
 
     self.fields['experiments'].choices = [(a,a) for a in range(1,5)] 
     analyzers = db.find_analyzers({'scenario_id': self.scenario_id})
@@ -119,8 +130,8 @@ class ScenarioMultiForm(forms.Form):
     self.fields['xaxis'].choices = axes
     if( len(analyzer.keys) ):
       self.fields['xaxis'].initial = analyzer.keys[0]
-      self.fields['xaxis_lower'].initial = scenario_set[0].sample_start_time
-      self.fields['xaxis_upper'].initial = scenario_set[0].sample_end_time
+      self.fields['xaxis_lower'].initial = scenario_set[idx].sample_start_time
+      self.fields['xaxis_upper'].initial = scenario_set[idx].sample_end_time
     self.fields['yaxis'].choices = axes
     if( len(analyzer.keys) > 1 ):
       self.fields['yaxis'].initial = analyzer.keys[1]
